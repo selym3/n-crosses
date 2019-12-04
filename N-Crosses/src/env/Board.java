@@ -1,12 +1,12 @@
 package env;
 
+import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.swing.JFrame;
@@ -81,20 +81,33 @@ public class Board extends JFrame implements ActionListener {
 		}
 	}
 
-	private boolean hasWon(Player player) {
-		for (int[] wc : WIN_CONDITIONS) {
+	private int[] hasWon(Player player) { // RETURNS [HAS WON (1/0), INDEX OF WIN CONDITION THAT WON]
+		for (int wc = 0;wc < 8;wc++) {
 			String[] vals = new String[size];
-			for (int i = 0;i < wc.length;i++) {
-				vals[i] = buttons.get(wc[i]).getText();
+			int tempIndex = -1;
+			for (int i = 0;i < WIN_CONDITIONS[wc].length;i++) {
+				vals[i] = buttons.get(WIN_CONDITIONS[wc][i]).getText();
+				tempIndex = wc;
 			}
 			//HashSet can only have a value once, so when it duplicaates the size maxes out at 1. Check that this value is "X" and not "" or "O"
 			Set<String> newVals = new HashSet<String>(Arrays.asList(vals)); //look up HashSet and Arrays in depth
 			if (newVals.size() == 1 && newVals.contains(player.toString())) {
-				return true;
+				return new int[] {1,tempIndex};
 			}
 		}
 		
-		return false; 
+		return new int[]{0,0}; 
+	}
+	
+	private void winSequence(int index) { //takes in a row to highlight as the winning row
+		gameOver = true;
+		for (int i : WIN_CONDITIONS[index]) {
+			System.out.print(i + " ");
+		}
+		for (int i :  WIN_CONDITIONS[index]) {
+			String player = buttons.get(i).getText(); //this should never be ""
+			buttons.get(i).setForeground((player == Player.X.toString() ? Color.green : Color.red));
+		}
 	}
 	
 	@Override
@@ -106,14 +119,14 @@ public class Board extends JFrame implements ActionListener {
 					if (target.getText().equals("")) {
 						if (alternateTurn%2 == 0) {
 							target.setText(Player.X.toString());
-							if(hasWon(Player.X)) {
-								gameOver = true;
+							if(hasWon(Player.X)[0] == 1) {
+								winSequence(hasWon(Player.X)[1]);
 							} 
 						} else {
 							target.setText(Player.O.toString());
-							if(hasWon(Player.O)) {
-								gameOver = true;
-							} 
+							if(hasWon(Player.O)[0] == 1) {
+								winSequence(hasWon(Player.O)[1]);
+							}
 						}
 						alternateTurn++;
 					}
